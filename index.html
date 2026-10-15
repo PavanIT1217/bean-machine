@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Galton — Interactive Bean Machine &amp; Galton Board Simulator</title>
+    <meta
+      name="description"
+      content="Discover patterns in randomness. Drop balls through an interactive Galton board (bean machine), see Pascal's triangle count every path, and watch the binomial distribution become a bell curve. Free, offline-ready, no sign-up."
+    />
+    <meta name="keywords" content="Galton board, bean machine, binomial distribution, normal distribution, central limit theorem, probability simulation, statistics, physics" />
+    <meta name="author" content="PavanIT1217" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://pavanit1217.github.io/bean-machine/" />
+    <meta name="theme-color" content="#fbf8f1" />
+    <meta name="color-scheme" content="light dark" />
+
+    <!-- Open Graph / social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Galton" />
+    <meta property="og:title" content="Galton — Discover patterns in randomness" />
+    <meta property="og:description" content="Watch the bell curve emerge, one bouncing ball at a time. Free, open-source probability simulator." />
+    <meta property="og:url" content="https://pavanit1217.github.io/bean-machine/" />
+    <meta property="og:image" content="https://pavanit1217.github.io/bean-machine/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="A Galton board with balls piled into a bell curve" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Galton — Discover patterns in randomness" />
+    <meta name="twitter:description" content="Watch the bell curve emerge, one bouncing ball at a time." />
+    <meta name="twitter:image" content="https://pavanit1217.github.io/bean-machine/og-image.png" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Galton" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Galton",
+        "alternateName": ["Bean Machine", "Galton Board Simulator"],
+        "url": "https://pavanit1217.github.io/bean-machine/",
+        "description": "Interactive Galton board (bean machine) that demonstrates the binomial distribution and its normal approximation with real-time physics.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires a modern browser with HTML5 canvas",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "educationalUse": "demonstration",
+        "about": ["Binomial distribution", "Normal distribution", "Central limit theorem", "Pascal's triangle"]
+      }
+    </script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="top">
+        <div class="brand">
+          <svg class="logo" viewBox="0 0 40 30" aria-hidden="true"><use href="#logo" /></svg>
+          <h1>Galton</h1>
+        </div>
+        <p class="tagline">Discover patterns in randomness</p>
+        <button id="btn-settings" class="icon-btn settings-btn" type="button" aria-label="Settings" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gear" /></svg>
+        </button>
+      </header>
+
+      <div class="tabs" role="tablist" aria-label="View">
+        <button id="tab-simulate" class="tab" role="tab" aria-selected="true" aria-controls="panel-simulate" type="button">Simulate</button>
+        <button id="tab-learn" class="tab" role="tab" aria-selected="false" aria-controls="panel-learn" type="button" tabindex="-1">Learn</button>
+      </div>
+
+      <main class="panels">
+        <section id="panel-simulate" class="panel simulate" role="tabpanel" aria-labelledby="tab-simulate">
+          <div id="board-wrap" class="board-wrap">
+            <canvas id="board" role="img" aria-label="Galton board: balls fall through a honeycomb of pegs labelled with Pascal's triangle and pile up into a bell curve."></canvas>
+          </div>
+          <p class="live" aria-live="off">
+            <span><b id="live-dropped">0</b> landed</span>
+            <span>mean <b id="live-mean">—</b><i> / <span id="live-mean-exp">—</span></i></span>
+            <span>σ <b id="live-sd">—</b><i> / <span id="live-sd-exp">—</span></i></span>
+            <span id="live-scale-wrap" hidden>● = <b id="live-scale">1</b></span>
+          </p>
+
+          <div class="option-row">
+            <label class="switch-field">
+              <span>Pascal numbers</span>
+              <input id="toggle-numbers" class="switch" type="checkbox" role="switch" checked />
+            </label>
+            <span class="divider" aria-hidden="true"></span>
+            <label class="switch-field">
+              <span>Bell curve</span>
+              <input id="toggle-curve" class="switch" type="checkbox" role="switch" checked />
+            </label>
+          </div>
+
+          <div class="option-row">
+            <div class="field-inline">
+              <span id="balls-label">Balls</span>
+              <div class="stepper" role="group" aria-labelledby="balls-label">
+                <button id="balls-dec" type="button" aria-label="Fewer balls">−</button>
+                <output id="balls-value" aria-live="polite">1,000</output>
+                <button id="balls-inc" type="button" aria-label="More balls">+</button>
+              </div>
+            </div>
+            <span class="divider" aria-hidden="true"></span>
+            <div class="field-inline">
+              <span id="speed-label">Speed</span>
+              <div class="segmented" role="radiogroup" aria-labelledby="speed-label">
+                <label><input type="radio" name="speed" value="0.5" /><span>0.5×</span></label>
+                <label><input type="radio" name="speed" value="1" checked /><span>1×</span></label>
+                <label><input type="radio" name="speed" value="2" /><span>2×</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="btn-play" class="btn-primary" type="button" data-state="play">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><use id="play-icon" href="#i-play" /></svg>
+              <span id="play-label">Start simulation</span>
+            </button>
+            <button id="btn-reset" class="icon-btn reset-btn" type="button" aria-label="Reset">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-reset" /></svg>
+            </button>
+          </div>
+        </section>
+
+        <section id="panel-learn" class="panel learn" role="tabpanel" aria-labelledby="tab-learn" hidden>
+          <article class="card">
+            <h2>Live statistics</h2>
+            <canvas id="histogram" class="histogram" role="img" aria-label="Histogram of observed bin frequencies with binomial and normal curves"></canvas>
+            <p class="legend"><span class="key bar"></span>observed <span class="key binom"></span>binomial <span class="key normal"></span>normal</p>
+            <table class="stats">
+              <thead><tr><th scope="col"></th><th scope="col">Observed</th><th scope="col">Expected</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Mean bin</th><td id="stat-mean-obs">—</td><td id="stat-mean-exp">—</td></tr>
+                <tr><th scope="row">Std deviation</th><td id="stat-sd-obs">—</td><td id="stat-sd-exp">—</td></tr>
+              </tbody>
+            </table>
+            <dl class="kv">
+              <div><dt>Balls landed</dt><dd id="stat-dropped">0</dd></div>
+              <div><dt>In flight</dt><dd id="stat-inflight">0</dd></div>
+              <div><dt title="Total variation distance between observed and binomial">Fit error</dt><dd id="stat-tvd">—</dd></div>
+              <div><dt>Each pile ball represents</dt><dd id="stat-scale">1 ball</dd></div>
+            </dl>
+          </article>
+
+          <article class="card">
+            <h2>Fast mode</h2>
+            <p>Skip the animation: outcomes are sampled straight from the binomial distribution, so the curve appears instantly.</p>
+            <div class="fast-row">
+              <button class="chip" type="button" data-fast="10000">+10k balls</button>
+              <button class="chip" type="button" data-fast="100000">+100k</button>
+              <button class="chip" type="button" data-fast="1000000">+1M</button>
+            </div>
+          </article>
+
+          <article class="card prose">
+            <h2>Why a bell curve?</h2>
+            <p>At every row a ball bounces left or right. With <em>n</em> rows and probability <em>p</em> of going right, the bin it lands in counts its right-bounces, so it follows the <strong>binomial distribution</strong> B(<em>n</em>,&nbsp;<em>p</em>) with mean <em>np</em> and variance <em>np</em>(1−<em>p</em>).</p>
+            <h2>Pascal's triangle</h2>
+            <p>The number in each cell is how many different left/right routes reach it — each is the sum of the two above. The bottom row, divided by 2<sup><em>n</em></sup>, is exactly the chance of each bin on a fair board.</p>
+            <h2>The central limit theorem</h2>
+            <p>Add up many small independent random steps and the total tends towards a <strong>normal</strong> distribution, whatever the steps look like. Sir Francis Galton built the first bean machine in 1873 to show it.</p>
+            <h2>Try this</h2>
+            <ul>
+              <li>Open settings ⚙ and push the bias to 70% — the hump slides right.</li>
+              <li>Use 30 rows and fast mode: the bars hug the curve almost perfectly.</li>
+              <li>With very few balls the pile is lumpy — that's sampling noise.</li>
+            </ul>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="settings" class="sheet" aria-labelledby="settings-title">
+      <form method="dialog" class="sheet-body">
+        <header class="sheet-head">
+          <h2 id="settings-title">Settings</h2>
+          <button class="icon-btn" value="close" aria-label="Close settings">✕</button>
+        </header>
+        <div class="field">
+          <label for="in-rows">Rows</label><output for="in-rows"></output>
+          <input id="in-rows" type="range" min="5" max="30" step="1" data-setting="rows" />
+        </div>
+        <div class="field">
+          <label for="in-rate">Drop rate</label><output for="in-rate"></output>
+          <input id="in-rate" type="range" min="1" max="60" step="1" data-setting="dropRate" />
+        </div>
+        <div class="field">
+          <label for="in-bounce">Peg bounciness</label><output for="in-bounce"></output>
+          <input id="in-bounce" type="range" min="0" max="0.9" step="0.05" data-setting="bounciness" />
+        </div>
+        <div class="field">
+          <label for="in-bias">Left / right bias</label><output for="in-bias"></output>
+          <input id="in-bias" type="range" min="0.3" max="0.7" step="0.01" data-setting="bias" />
+        </div>
+        <div class="field">
+          <label for="in-gravity">Gravity</label><output for="in-gravity"></output>
+          <input id="in-gravity" type="range" min="0.3" max="3" step="0.1" data-setting="gravity" />
+        </div>
+        <div class="field">
+          <span id="theme-label">Theme</span>
+          <div class="segmented wide" role="radiogroup" aria-labelledby="theme-label">
+            <label><input type="radio" name="theme" value="system" checked /><span>Auto</span></label>
+            <label><input type="radio" name="theme" value="light" /><span>Light</span></label>
+            <label><input type="radio" name="theme" value="dark" /><span>Dark</span></label>
+          </div>
+        </div>
+        <p class="hint">Keyboard: Space = start / pause · R = reset. Rows and bias changes start a new run.</p>
+        <p class="hint">Open source on <a href="https://github.com/PavanIT1217/bean-machine" rel="noopener">GitHub</a> · <a href="./privacy.html">Privacy</a></p>
+      </form>
+    </dialog>
+
+    <noscript>
+      <p class="noscript">Galton is an interactive Galton board (bean machine) simulator showing how the binomial distribution and bell curve emerge from randomness. Please enable JavaScript to use it.</p>
+    </noscript>
+
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <radialGradient id="gold" cx="35%" cy="30%" r="70%">
+          <stop offset="0" stop-color="#f6d49a" />
+          <stop offset="0.5" stop-color="#d1902f" />
+          <stop offset="1" stop-color="#9a6417" />
+        </radialGradient>
+      </defs>
+      <symbol id="logo" viewBox="0 0 40 30">
+        <g fill="url(#gold)">
+          <circle cx="20" cy="5" r="4.2" />
+          <circle cx="13" cy="15" r="4.2" /><circle cx="27" cy="15" r="4.2" />
+          <circle cx="6" cy="25" r="4.2" /><circle cx="20" cy="25" r="4.2" /><circle cx="34" cy="25" r="4.2" />
+        </g>
+      </symbol>
+      <symbol id="i-gear" viewBox="0 0 24 24">
+        <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M10.3 2.6h3.4l.5 2.5 1.6.9 2.4-.9 1.7 2.9-1.9 1.7v1.8l1.9 1.7-1.7 2.9-2.4-.9-1.6.9-.5 2.5h-3.4l-.5-2.5-1.6-.9-2.4.9-1.7-2.9 1.9-1.7v-1.8L3.6 8l1.7-2.9 2.4.9 1.6-.9z" />
+        <circle cx="12" cy="12" r="3.1" fill="none" stroke="currentColor" stroke-width="1.7" />
+      </symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M7 4.5v15a1 1 0 0 0 1.5.86l12.4-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z" /></symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4.2" height="16" rx="1.2" fill="currentColor" /><rect x="13.8" y="4" width="4.2" height="16" rx="1.2" fill="currentColor" /></symbol>
+      <symbol id="i-reset" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4.5h-4.5" /></symbol>
+    </svg>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
